@@ -261,10 +261,10 @@ function loop(ts) {
     const o = obstacles[i];
     const b = { x: o.x, y: o.y, w: o.w, h: o.h };
     const a = { x: player.x, y: player.y, w: player.w, h: player.h };
-    // disable collision at peak of jump to let player hop over a single car
-    const jumpingSafe = player.jumpT > 0 && (player.y + player.h - (player.y - 12)) > 0; // placeholder always true when jumping
+    // if overlapping while jumping, mark obstacle as cleared so it won't collide after landing
     if (collide(a, b)) {
-      if (player.jumpT > 0) continue; // pass over while in air
+      if (player.jumpT > 0) { o.cleared = true; continue; }
+      if (o.cleared) continue;
       running = false;
       gameOver = true;
       btn.textContent = 'Restart';
