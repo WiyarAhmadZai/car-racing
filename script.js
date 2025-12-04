@@ -73,6 +73,13 @@ function reset() {
   btn.disabled = false;
   scoreEl.textContent = '0';
   if (gameoverEl) { gameoverEl.hidden = true; gameoverEl.style.display = 'none'; }
+  // increment global plays for each new game start
+  (async () => {
+    const newPlays = await countapiHit('plays');
+    if (globalPlayedEl) globalPlayedEl.textContent = newPlays.toLocaleString();
+    const goPlaysEl = document.getElementById('goGlobalPlayed');
+    if (goPlaysEl) goPlaysEl.textContent = newPlays.toLocaleString();
+  })();
   requestAnimationFrame(loop);
 }
 
@@ -456,12 +463,18 @@ initWelcome();
 const COUNT_NS = 'wiyargames.car-racing';
 async function countapiCreate(key) {
   try {
-    await fetch(`https://api.countapi.xyz/create?namespace=${encodeURIComponent(COUNT_NS)}&key=${encodeURIComponent(key)}&value=0`);
+    await fetch(`https://api.countapi.xyz/create?namespace=${encodeURIComponent(COUNT_NS)}&key=${encodeURIComponent(key)}&value=0`, {
+      cache: 'no-store',
+      headers: { 'cache-control': 'no-cache' }
+    });
   } catch {}
 }
 async function countapiGet(key) {
   try {
-    const r = await fetch(`https://api.countapi.xyz/get/${encodeURIComponent(COUNT_NS)}/${encodeURIComponent(key)}`);
+    const r = await fetch(`https://api.countapi.xyz/get/${encodeURIComponent(COUNT_NS)}/${encodeURIComponent(key)}`, {
+      cache: 'no-store',
+      headers: { 'cache-control': 'no-cache' }
+    });
     if (!r.ok) return 0;
     const j = await r.json();
     return j.value || 0;
@@ -469,7 +482,10 @@ async function countapiGet(key) {
 }
 async function countapiHit(key) {
   try {
-    const r = await fetch(`https://api.countapi.xyz/hit/${encodeURIComponent(COUNT_NS)}/${encodeURIComponent(key)}`);
+    const r = await fetch(`https://api.countapi.xyz/hit/${encodeURIComponent(COUNT_NS)}/${encodeURIComponent(key)}`, {
+      cache: 'no-store',
+      headers: { 'cache-control': 'no-cache' }
+    });
     if (!r.ok) return 0;
     const j = await r.json();
     return j.value || 0;
@@ -488,12 +504,7 @@ async function countapiHit(key) {
 })();
 
 // When user starts playing, increment global plays and update UI
-if (startPlayBtn) {
-  startPlayBtn.addEventListener('click', async () => {
-    const newPlays = await countapiHit('plays');
-    if (globalPlayedEl) globalPlayedEl.textContent = newPlays.toLocaleString();
-  });
-}
+// (plays increment happens in reset())
 
 // records helpers and game over overlay
 function getLocalInt(key, def = 0) {
