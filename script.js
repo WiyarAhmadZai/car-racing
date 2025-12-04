@@ -6,6 +6,12 @@ const btn = document.getElementById('btn');
 const welcomeEl = document.getElementById('welcome');
 const playCountEl = document.getElementById('playCount');
 const startPlayBtn = document.getElementById('startPlay');
+// game over modal elements
+const gameoverEl = document.getElementById('gameover');
+const goScoreEl = document.getElementById('goScore');
+const goBestEl = document.getElementById('goBest');
+const goGamesEl = document.getElementById('goGames');
+const restartPlayBtn = document.getElementById('restartPlay');
 const leftBtn = document.getElementById('left');
 const rightBtn = document.getElementById('right');
 const upBtn = document.getElementById('up');
@@ -63,6 +69,7 @@ function reset() {
   btn.textContent = 'Pause';
   btn.disabled = false;
   scoreEl.textContent = '0';
+  if (gameoverEl) gameoverEl.hidden = true;
   requestAnimationFrame(loop);
 }
 
@@ -273,6 +280,7 @@ function loop(ts) {
       gameOver = true;
       btn.textContent = 'Restart';
       flash();
+      showGameOver();
       break;
     }
   }
@@ -436,3 +444,33 @@ if (startPlayBtn) {
 
 // show welcome on load instead of auto-start
 initWelcome();
+
+// records helpers and game over overlay
+function getLocalInt(key, def = 0) {
+  try {
+    const v = localStorage.getItem(key);
+    const n = v ? parseInt(v, 10) : def;
+    return Number.isFinite(n) ? n : def;
+  } catch { return def; }
+}
+function setLocalInt(key, val) {
+  try { localStorage.setItem(key, String(val)); } catch {}
+}
+function showGameOver() {
+  // update records
+  const current = score; // score equals cars passed
+  const best = Math.max(current, getLocalInt('bestScore', 0));
+  setLocalInt('bestScore', best);
+  const games = getLocalInt('gamesPlayed', 0) + 1;
+  setLocalInt('gamesPlayed', games);
+  if (goScoreEl) goScoreEl.textContent = String(current);
+  if (goBestEl) goBestEl.textContent = String(best);
+  if (goGamesEl) goGamesEl.textContent = String(games);
+  if (gameoverEl) gameoverEl.hidden = false;
+}
+if (restartPlayBtn) {
+  restartPlayBtn.addEventListener('click', () => {
+    if (gameoverEl) gameoverEl.hidden = true;
+    reset();
+  });
+}
