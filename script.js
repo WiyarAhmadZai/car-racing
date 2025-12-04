@@ -12,6 +12,9 @@ const goScoreEl = document.getElementById('goScore');
 const goBestEl = document.getElementById('goBest');
 const goGamesEl = document.getElementById('goGames');
 const restartPlayBtn = document.getElementById('restartPlay');
+// global counters elements (welcome)
+const visitCountEl = document.getElementById('visitCount');
+const globalPlayedEl = document.getElementById('globalPlayed');
 const leftBtn = document.getElementById('left');
 const rightBtn = document.getElementById('right');
 const upBtn = document.getElementById('up');
@@ -449,6 +452,49 @@ if (startPlayBtn) {
 // show welcome on load instead of auto-start
 initWelcome();
 
+// Global counters via CountAPI (https://countapi.xyz)
+const COUNT_NS = 'wiyargames.car-racing';
+async function countapiCreate(key) {
+  try {
+    await fetch(`https://api.countapi.xyz/create?namespace=${encodeURIComponent(COUNT_NS)}&key=${encodeURIComponent(key)}&value=0`);
+  } catch {}
+}
+async function countapiGet(key) {
+  try {
+    const r = await fetch(`https://api.countapi.xyz/get/${encodeURIComponent(COUNT_NS)}/${encodeURIComponent(key)}`);
+    if (!r.ok) return 0;
+    const j = await r.json();
+    return j.value || 0;
+  } catch { return 0; }
+}
+async function countapiHit(key) {
+  try {
+    const r = await fetch(`https://api.countapi.xyz/hit/${encodeURIComponent(COUNT_NS)}/${encodeURIComponent(key)}`);
+    if (!r.ok) return 0;
+    const j = await r.json();
+    return j.value || 0;
+  } catch { return 0; }
+}
+
+// Ensure keys and update UI on load
+(async () => {
+  await countapiCreate('visits');
+  await countapiCreate('plays');
+  // Increment visits every time the page is opened and show the updated value
+  const visits = await countapiHit('visits');
+  if (visitCountEl) visitCountEl.textContent = visits.toLocaleString();
+  const plays = await countapiGet('plays');
+  if (globalPlayedEl) globalPlayedEl.textContent = plays.toLocaleString();
+})();
+
+// When user starts playing, increment global plays and update UI
+if (startPlayBtn) {
+  startPlayBtn.addEventListener('click', async () => {
+    const newPlays = await countapiHit('plays');
+    if (globalPlayedEl) globalPlayedEl.textContent = newPlays.toLocaleString();
+  });
+}
+
 // records helpers and game over overlay
 function getLocalInt(key, def = 0) {
   try {
@@ -471,6 +517,15 @@ function showGameOver() {
   if (goBestEl) goBestEl.textContent = String(best);
   if (goGamesEl) goGamesEl.textContent = String(games);
   if (gameoverEl) { gameoverEl.hidden = false; gameoverEl.style.display = 'grid'; }
+  // also show latest global totals
+  (async () => {
+    const visits = await countapiGet('visits');
+    const plays = await countapiGet('plays');
+    const vEl = document.getElementById('goVisitCount');
+    const pEl = document.getElementById('goGlobalPlayed');
+    if (vEl) vEl.textContent = visits.toLocaleString();
+    if (pEl) pEl.textContent = plays.toLocaleString();
+  })();
 }
 if (restartPlayBtn) {
   restartPlayBtn.addEventListener('click', () => {
