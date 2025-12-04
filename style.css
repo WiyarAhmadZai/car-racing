@@ -40,6 +40,7 @@ canvas#game {
   background: #0a0c10;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 0 0 2px rgba(255,255,255,0.04);
+  touch-action: none; /* allow pointer gestures for steering */
 }
 .controls {
   display: grid;
@@ -70,4 +71,8 @@ canvas#game {
 
 @media (pointer: coarse) {
   #jump-indicator { display: none; }
+  /* show only Jump button on mobile, centered */
+  .controls { grid-template-columns: 1fr; }
+  .controls button { width: 100%; max-width: 220px; }
+  .controls button:not(#jump) { display: none; }
 }
