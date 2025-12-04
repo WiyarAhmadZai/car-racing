@@ -335,8 +335,8 @@ function doJump() {
 
 function bindHold(btn, onPress) {
   let id = null;
-  const start = () => { onPress(); id = setInterval(onPress, 120); };
-  const end = () => { if (id) clearInterval(id), id = null; };
+  const start = () => { btn.classList.add('pressed'); onPress(); id = setInterval(onPress, 120); };
+  const end = () => { btn.classList.remove('pressed'); if (id) clearInterval(id), id = null; };
   btn.addEventListener('pointerdown', (e) => { e.preventDefault(); start(); });
   ['pointerup','pointercancel','pointerleave'].forEach(ev => btn.addEventListener(ev, end));
 }
@@ -354,7 +354,13 @@ bindDirectionalHold(leftBtn, v=>keys.left=v);
 bindDirectionalHold(rightBtn, v=>keys.right=v);
 bindDirectionalHold(upBtn, v=>keys.up=v);
 bindDirectionalHold(downBtn, v=>keys.down=v);
-jumpBtn.addEventListener('click', doJump);
+jumpBtn.addEventListener('click', () => {
+  doJump();
+  if (navigator.vibrate) navigator.vibrate(15);
+});
+// pressed visual for jump on touch
+jumpBtn.addEventListener('pointerdown', ()=> jumpBtn.classList.add('pressed'));
+['pointerup','pointercancel','pointerleave'].forEach(ev => jumpBtn.addEventListener(ev, ()=> jumpBtn.classList.remove('pressed')));
 
 // touch steering handlers on canvas
 function toCanvasPoint(e) {
