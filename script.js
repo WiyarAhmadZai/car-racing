@@ -2,6 +2,10 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const btn = document.getElementById('btn');
+// welcome modal elements
+const welcomeEl = document.getElementById('welcome');
+const playCountEl = document.getElementById('playCount');
+const startPlayBtn = document.getElementById('startPlay');
 const leftBtn = document.getElementById('left');
 const rightBtn = document.getElementById('right');
 const upBtn = document.getElementById('up');
@@ -398,4 +402,32 @@ btn.addEventListener('click', () => {
   else btn.textContent = 'Resume';
 });
 
-reset();
+// welcome modal / play counter
+function initWelcome() {
+  // increment persistent play count per visit
+  let count = 0;
+  try {
+    const raw = localStorage.getItem('playCount');
+    count = raw ? parseInt(raw, 10) || 0 : 0;
+    count += 1;
+    localStorage.setItem('playCount', String(count));
+  } catch (e) {
+    count += 1; // fallback volatile
+  }
+  if (playCountEl) playCountEl.textContent = count.toLocaleString();
+  if (welcomeEl) {
+    welcomeEl.hidden = false;
+    // disable running until start pressed
+    running = false;
+  }
+}
+
+if (startPlayBtn) {
+  startPlayBtn.addEventListener('click', () => {
+    if (welcomeEl) welcomeEl.hidden = true;
+    reset();
+  });
+}
+
+// show welcome on load instead of auto-start
+initWelcome();
