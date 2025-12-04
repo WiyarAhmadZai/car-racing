@@ -15,12 +15,15 @@ body {
 }
 .hud {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   align-items: center;
   gap: 8px;
 }
 .title { font-weight: 700; letter-spacing: 0.5px; opacity: 0.9; }
-.score { font-variant-numeric: tabular-nums; background: #1b1f2a; padding: 6px 10px; border-radius: 8px; }
+.score { font-variant-numeric: tabular-nums; background: #1b1f2a; padding: 6px 10px; border-radius: 8px; display: flex; align-items: center; gap: 6px; }
+.score .sep { opacity: 0.35; }
+.kbd { background: #111318; border: 1px solid #2a3142; padding: 4px 8px; border-radius: 6px; font-size: 12px; opacity: 0.8; }
+.kbd.active { background: #0b3b2f; border-color: #1b5e47; color: #9af0d0; opacity: 1; }
 .btn {
   background: #4f46e5;
   border: none;
@@ -43,6 +46,8 @@ canvas#game {
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   user-select: none;
+  justify-items: center;
+  justify-content: center;
 }
 .controls button {
   background: #1b1f2a;
@@ -51,6 +56,7 @@ canvas#game {
   border-radius: 10px;
   padding: 12px 0;
   font-size: 20px;
+  width: 64px;
 }
 #left { grid-column: 1/2; }
 #up { grid-column: 2/3; }
@@ -60,4 +66,8 @@ canvas#game {
 .controls .accent { background: #0b3b2f; border-color: #1b5e47; color: #9af0d0; font-weight: 600; }
 @media (pointer: fine) {
   .controls { display: none; }
+}
+
+@media (pointer: coarse) {
+  #jump-indicator { display: none; }
 }
