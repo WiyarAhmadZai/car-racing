@@ -51,6 +51,11 @@ const player = {
 const obstacles = [];
 const laneDashes = [];
 const banners = [];
+// player speed scaling
+const basePlayerSpeed = 220;
+const speedStepScore = 200; // increase speed every 200 score
+const speedStepAmount = 18; // px/s per step
+const maxPlayerSpeed = 420;
 
 function reset() {
   running = true;
@@ -63,6 +68,7 @@ function reset() {
   player.x = W * 0.5 - player.w/2;
   player.y = H - 120;
   player.vx = 0; player.vy = 0;
+  player.speed = basePlayerSpeed;
   player.jumpT = 0; player.canJump = true;
   obstacles.length = 0;
   laneDashes.length = 0;
@@ -170,6 +176,11 @@ function update(dt) {
     if (o.y > H + 100) obstacles.splice(i, 1);
   }
   // player movement
+  // scale player speed with score: +speedStepAmount every 200 score
+  {
+    const steps = Math.floor(score / speedStepScore);
+    player.speed = Math.min(maxPlayerSpeed, basePlayerSpeed + steps * speedStepAmount);
+  }
   // touch steering: smoothly move toward target if present
   if (touchTarget) {
     const cx = player.x + player.w/2;
