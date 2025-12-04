@@ -19,6 +19,7 @@ let roadSpeed = 180; // px/s downward scroll speed
 const W = canvas.width;
 const H = canvas.height;
 const laneLines = 3; // just for visuals
+let touchTarget = null; // {x,y} in canvas coords for mobile steering
 
 const player = {
   x: W * 0.5 - 22,
@@ -148,6 +149,21 @@ function update(dt) {
     if (o.y > H + 100) obstacles.splice(i, 1);
   }
   // player movement
+  // touch steering: smoothly move toward target if present
+  if (touchTarget) {
+    const cx = player.x + player.w/2;
+    const cy = player.y + player.h/2;
+    let dx = touchTarget.x - cx;
+    let dyv = touchTarget.y - cy;
+    const dist = Math.hypot(dx, dyv);
+    const s = player.speed;
+    if (dist > 2) {
+      player.vx = (dx / dist) * s;
+      player.vy = (dyv / dist) * s;
+    } else {
+      player.vx = 0; player.vy = 0;
+    }
+  }
   player.x += player.vx * dt;
   player.y += player.vy * dt;
   // bounds
@@ -227,9 +243,9 @@ function draw() {
   // visual jump offset
   let jumpZ = 0;
   if (player.jumpT > 0) {
-    const t = player.jumpT / player.jumpDur; // 0..1
-    const k = 1 - Math.abs(2*t - 1); // triangle
-    jumpZ = player.jumpPeak * (1 - k*k); // smooth apex
+    const t = Math.min(1, player.jumpT / player.jumpDur); // 0..1
+    // sine easing for smooth up/down
+    jumpZ = Math.sin(Math.PI * t) * player.jumpPeak;
   }
   drawCar(player.x, player.y - jumpZ, player.w, player.h, player.color);
 }
@@ -313,6 +329,8 @@ function doJump() {
   if (!player.canJump || player.jumpT > 0) return;
   player.canJump = false;
   player.jumpT = 0.0001; // start jump
+  const ji = document.getElementById('jump-indicator');
+  if (ji) ji.classList.add('active');
 }
 
 function bindHold(btn, onPress) {
@@ -337,6 +355,35 @@ bindDirectionalHold(rightBtn, v=>keys.right=v);
 bindDirectionalHold(upBtn, v=>keys.up=v);
 bindDirectionalHold(downBtn, v=>keys.down=v);
 jumpBtn.addEventListener('click', doJump);
+
+// touch steering handlers on canvas
+function toCanvasPoint(e) {
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+  return { x, y };
+}
+canvas.addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+    e.preventDefault();
+    touchTarget = toCanvasPoint(e);
+  }
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!touchTarget) return;
+  if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+    e.preventDefault();
+    touchTarget = toCanvasPoint(e);
+  }
+});
+const clearTouch = (e)=>{
+  if (touchTarget) {
+    touchTarget = null;
+    // stop drift
+    player.vx = 0; player.vy = 0;
+  }
+};
+['pointerup','pointercancel','pointerleave','pointerout'].forEach(ev => canvas.addEventListener(ev, clearTouch));
 
 btn.addEventListener('click', () => {
   if (gameOver) { reset(); return; }
