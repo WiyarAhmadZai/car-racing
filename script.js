@@ -1,6 +1,7 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
+const carsEl = document.getElementById('cars');
 const btn = document.getElementById('btn');
 const leftBtn = document.getElementById('left');
 const rightBtn = document.getElementById('right');
@@ -13,6 +14,7 @@ let gameOver = false;
 let lastTime = 0;
 let spawnAcc = 0;
 let score = 0;
+let cars = 0;
 let roadSpeed = 180; // px/s downward scroll speed
 
 const W = canvas.width;
@@ -42,6 +44,7 @@ function reset() {
   lastTime = 0;
   spawnAcc = 0;
   score = 0;
+  cars = 0;
   roadSpeed = 180;
   player.x = W * 0.5 - player.w/2;
   player.y = H - 120;
@@ -52,6 +55,8 @@ function reset() {
   for (let i = 0; i < 16; i++) laneDashes.push({ y: i * 48 });
   btn.textContent = 'Pause';
   btn.disabled = false;
+  scoreEl.textContent = '0';
+  if (carsEl) carsEl.textContent = '0';
   requestAnimationFrame(loop);
 }
 
@@ -128,6 +133,12 @@ function update(dt) {
   for (let i = obstacles.length - 1; i >= 0; i--) {
     const o = obstacles[i];
     o.y += dy;
+    // count when an obstacle has passed the player
+    if (!o.passed && o.y > player.y + player.h) {
+      o.passed = true;
+      cars++;
+      if (carsEl) carsEl.textContent = cars.toString();
+    }
     if (o.y > H + 100) obstacles.splice(i, 1);
   }
   // player movement
@@ -147,6 +158,9 @@ function update(dt) {
     if (player.jumpT >= player.jumpDur) {
       player.jumpT = 0;
       player.canJump = true;
+      // jump finished -> remove indicator active state
+      const ji = document.getElementById('jump-indicator');
+      if (ji) ji.classList.remove('active');
     }
   }
 
@@ -252,12 +266,23 @@ document.addEventListener('keydown', (e) => {
     if (!running) { running = true; btn.textContent='Pause'; requestAnimationFrame(loop); return; }
     // jump on space when running
     doJump();
+    const ji = document.getElementById('jump-indicator');
+    if (ji) ji.classList.add('active');
     return;
   }
   onKey(e, true);
   updateVelocity();
 });
-document.addEventListener('keyup', (e) => { onKey(e, false); updateVelocity(); });
+document.addEventListener('keyup', (e) => {
+  if (e.code === 'Space') {
+    // if jump already ended, remove highlight; else keep until update clears it
+    const ji = document.getElementById('jump-indicator');
+    if (ji && player.jumpT <= 0) ji.classList.remove('active');
+    return;
+  }
+  onKey(e, false);
+  updateVelocity();
+});
 
 function updateVelocity() {
   const s = player.speed;
