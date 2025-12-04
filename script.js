@@ -1,7 +1,6 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
-const carsEl = document.getElementById('cars');
 const btn = document.getElementById('btn');
 const leftBtn = document.getElementById('left');
 const rightBtn = document.getElementById('right');
@@ -31,12 +30,13 @@ const player = {
   vx: 0,
   vy: 0,
   jumpT: 0, // seconds into jump (0 = grounded)
-  jumpDur: 0.6,
-  jumpPeak: 16, // visual lift in px
+  jumpDur: 0.7,
+  jumpPeak: 90, // visual lift in px (higher than a car height)
   canJump: true
 };
 const obstacles = [];
 const laneDashes = [];
+const banners = [];
 
 function reset() {
   running = true;
@@ -52,11 +52,12 @@ function reset() {
   player.jumpT = 0; player.canJump = true;
   obstacles.length = 0;
   laneDashes.length = 0;
+  banners.length = 0;
   for (let i = 0; i < 16; i++) laneDashes.push({ y: i * 48 });
+  for (let i = 0; i < 4; i++) banners.push({ y: i * 220 + 80 });
   btn.textContent = 'Pause';
   btn.disabled = false;
   scoreEl.textContent = '0';
-  if (carsEl) carsEl.textContent = '0';
   requestAnimationFrame(loop);
 }
 
@@ -124,6 +125,10 @@ function update(dt) {
     laneDashes[i].y += dy;
     if (laneDashes[i].y > H) laneDashes[i].y -= H + 24;
   }
+  for (let i = 0; i < banners.length; i++) {
+    banners[i].y += dy;
+    if (banners[i].y > H + 60) banners[i].y -= (H + 280);
+  }
   spawnAcc += dt;
   const spawnEvery = Math.max(0.55, 1.05 - Math.min(0.6, score / 6000));
   if (spawnAcc > spawnEvery) {
@@ -137,7 +142,8 @@ function update(dt) {
     if (!o.passed && o.y > player.y + player.h) {
       o.passed = true;
       cars++;
-      if (carsEl) carsEl.textContent = cars.toString();
+      score = cars; // score equals cars passed
+      scoreEl.textContent = score.toString();
     }
     if (o.y > H + 100) obstacles.splice(i, 1);
   }
@@ -164,8 +170,7 @@ function update(dt) {
     }
   }
 
-  score += dy * 0.06;
-  scoreEl.textContent = Math.floor(score).toString();
+  // score is cars passed; HUD updated above when cars increments
   // slightly increase difficulty over time
   roadSpeed = Math.min(300, 180 + score * 0.35);
 }
@@ -196,6 +201,20 @@ function drawRoad() {
       const x = l * laneW + laneW/2 - dashW/2;
       rect(x, y, dashW, dashH, 4, 'rgba(255,255,255,0.12)');
     }
+  }
+  // scrolling banners with name
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 16px system-ui, sans-serif';
+  for (let i = 0; i < banners.length; i++) {
+    const y = Math.floor(banners[i].y);
+    const bx = 24, bw = W - 48, bh = 22;
+    rect(bx, y, bw, bh, 8, 'rgba(255,255,255,0.06)');
+    // small flag triangles at sides
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.beginPath(); ctx.moveTo(bx - 8, y + 2); ctx.lineTo(bx, y + 2); ctx.lineTo(bx, y + bh - 2); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(bx + bw + 8, y + 2); ctx.lineTo(bx + bw, y + 2); ctx.lineTo(bx + bw, y + bh - 2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#e8eaed';
+    ctx.fillText('WiyarGames', W/2, y + bh/2 + 5);
   }
 }
 
