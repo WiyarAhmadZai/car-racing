@@ -69,7 +69,7 @@ function reset() {
   btn.textContent = 'Pause';
   btn.disabled = false;
   scoreEl.textContent = '0';
-  if (gameoverEl) gameoverEl.hidden = true;
+  if (gameoverEl) { gameoverEl.hidden = true; gameoverEl.style.display = 'none'; }
   requestAnimationFrame(loop);
 }
 
@@ -229,19 +229,19 @@ function drawRoad() {
       rect(x, y, dashW, dashH, 4, 'rgba(255,255,255,0.12)');
     }
   }
-  // scrolling banners with name
+  // subtle, translucent road branding
   ctx.textAlign = 'center';
-  ctx.font = 'bold 16px system-ui, sans-serif';
+  ctx.font = '700 18px system-ui, sans-serif';
   for (let i = 0; i < banners.length; i++) {
     const y = Math.floor(banners[i].y);
-    const bx = 24, bw = W - 48, bh = 22;
-    rect(bx, y, bw, bh, 8, 'rgba(255,255,255,0.06)');
-    // small flag triangles at sides
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    ctx.beginPath(); ctx.moveTo(bx - 8, y + 2); ctx.lineTo(bx, y + 2); ctx.lineTo(bx, y + bh - 2); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(bx + bw + 8, y + 2); ctx.lineTo(bx + bw, y + 2); ctx.lineTo(bx + bw, y + bh - 2); ctx.closePath(); ctx.fill();
+    ctx.save();
+    ctx.globalAlpha = 0.14; // low opacity for a transparent feel
     ctx.fillStyle = '#e8eaed';
-    ctx.fillText('WiyarGames', W/2, y + bh/2 + 5);
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.shadowBlur = 2;
+    ctx.shadowOffsetY = 1;
+    ctx.fillText('WiyarGames', W/2, y);
+    ctx.restore();
   }
 }
 
@@ -414,30 +414,34 @@ btn.addEventListener('click', () => {
 function initWelcome() {
   // increment persistent play count per visit
   let count = 0;
+  let firstVisit = true;
   try {
     const raw = localStorage.getItem('playCount');
     count = raw ? parseInt(raw, 10) || 0 : 0;
+    firstVisit = localStorage.getItem('hasVisited') !== '1';
     count += 1;
     localStorage.setItem('playCount', String(count));
   } catch (e) {
     count += 1; // fallback volatile
+    firstVisit = true; // safer default: show welcome if storage blocked
   }
   if (playCountEl) playCountEl.textContent = count.toLocaleString();
   if (welcomeEl) {
-    welcomeEl.hidden = false;
-    // disable running until start pressed
-    running = false;
+    if (firstVisit) {
+      welcomeEl.hidden = false;
+      welcomeEl.style.display = 'grid';
+      running = false;
+      return;
+    }
   }
+  // auto-start game for returning visitors
+  reset();
 }
 
 if (startPlayBtn) {
   startPlayBtn.addEventListener('click', () => {
-    if (welcomeEl) {
-      // hide and remove to avoid any lingering overlay styles
-      welcomeEl.hidden = true;
-      welcomeEl.style.display = 'none';
-      if (welcomeEl.parentNode) welcomeEl.parentNode.removeChild(welcomeEl);
-    }
+    if (welcomeEl) { welcomeEl.hidden = true; welcomeEl.style.display = 'none'; }
+    try { localStorage.setItem('hasVisited', '1'); } catch {}
     reset();
   });
 }
@@ -466,11 +470,11 @@ function showGameOver() {
   if (goScoreEl) goScoreEl.textContent = String(current);
   if (goBestEl) goBestEl.textContent = String(best);
   if (goGamesEl) goGamesEl.textContent = String(games);
-  if (gameoverEl) gameoverEl.hidden = false;
+  if (gameoverEl) { gameoverEl.hidden = false; gameoverEl.style.display = 'grid'; }
 }
 if (restartPlayBtn) {
   restartPlayBtn.addEventListener('click', () => {
-    if (gameoverEl) gameoverEl.hidden = true;
+    if (gameoverEl) { gameoverEl.hidden = true; gameoverEl.style.display = 'none'; }
     reset();
   });
 }
