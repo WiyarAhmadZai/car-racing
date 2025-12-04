@@ -34,6 +34,32 @@ body {
 }
 .btn:hover { filter: brightness(1.1); }
 
+/* overlay modal */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 50;
+}
+.modal {
+  width: min(92vw, 420px);
+  background: #0f1115;
+  border: 1px solid #2a3142;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.04);
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+.modal-title { font-weight: 800; font-size: 20px; letter-spacing: 0.3px; }
+.modal-body { opacity: 0.9; }
+.modal .btn { justify-self: center; padding: 10px 16px; }
+
 canvas#game {
   width: 360px;
   height: 640px;
