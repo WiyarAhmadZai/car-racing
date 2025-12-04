@@ -424,7 +424,12 @@ function initWelcome() {
 
 if (startPlayBtn) {
   startPlayBtn.addEventListener('click', () => {
-    if (welcomeEl) welcomeEl.hidden = true;
+    if (welcomeEl) {
+      // hide and remove to avoid any lingering overlay styles
+      welcomeEl.hidden = true;
+      welcomeEl.style.display = 'none';
+      if (welcomeEl.parentNode) welcomeEl.parentNode.removeChild(welcomeEl);
+    }
     reset();
   });
 }
